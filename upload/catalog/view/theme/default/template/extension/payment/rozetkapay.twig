@@ -1,3 +1,4 @@
+{% if pay %}
 <div class="row">
 <div class="buttons">
     <div class="pull-right">
@@ -5,20 +6,13 @@
     </div>
 </div>
 </div>
-    <style>
- svg[rpay]{
-  width: 100px;
-  height: 100px;
-  margin: 20px;
-  display:inline-block;
-}
-</style>
+<style>svg[rpay]{width: 100px;height: 100px;margin: 20px;display:inline-block;}</style>
 <div class="row">
     <div class="col-sm-12 text-center">
-        <div id="rozetkapay_pay" style="display: none">
-            <a href=""  class="btn btn-primary">{{ button_pay }}</a>
+        <div id="rozetkapay_pay">
+            <a href="{{ pay_href }}"  class="btn btn-primary">{{ button_pay }}</a>
             <br>
-                <img rpay_qrcode src="" style="display: none" height="150">
+            <img rpay_qrcode src="" style="display: none" height="150">
             <svg class="" rpay version="1.1" id="L9" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
                 viewBox="0 0 100 100" enable-background="new 0 0 0 0" xml:space="preserve">
                   <rect x="20" y="50" width="4" height="10" fill="#000">
@@ -43,52 +37,18 @@
         </div>
     </div>    
 </div>
-<div rozetkapay_alert_error style="display: none; color: red"></div>
+{% if pay_qrcode %}
 <script>
-    $('[rozetkapay_alert_error]').html('').hide()
-    $('#button-confirm').bind('click', function () {
-        $('#rozetkapay_pay').hide()
-        $('[rozetkapay_alert_error]').hide()
-        let but = $(this)
-        $('#button-confirm').parent().find('.alert').remove()
-        $.ajax({
-            url: 'index.php?route={{ path }}/createPay',
-            dataType: 'json'
-        }).done(function (json) {
-            
-            if(json.pay && !json.qrcode){
-                location = json.pay_href
-            }
-
-            if (json.pay) {
-                
-                $('#rozetkapay_pay a').attr('href', json.pay_href)
-
-                if (json.qrcode) {
-                    $('[rpay_qrcode]').attr('src','/catalog/view/theme/default/image/loader.svg')
-                    
-                    $.ajax({
-                        method:'POST',
-                        url: 'index.php?route={{ path }}/genQrCode',
-                        data:{ 'text':json.pay_href}
-                    }).done(function (image) {
-                        $('[rpay_qrcode]').attr('src',image).show()
-                        $('svg[rpay]').hide()
-                    })
-                }
-                
-                $('#rozetkapay_pay').show()
-            }
-            
-            if(json.pay){
-                $('#button-confirm').hide()
-            }
-            
-            if(json.alert.length > 0){
-                $('[rozetkapay_alert_error]').html(json['alert'].join('<br>')).show()
-                
-            }
-        });
-        return false;
-    });
+    $.ajax({
+        method:'POST',
+        url: 'index.php?route={{ path }}/genQrCode',
+        data:{ 'text':'{{ pay_href }}' }
+    }).done(function (image) {
+        $('[rpay_qrcode]').attr('src',image).show()
+        $('svg[rpay]').hide()
+    })    
 </script>
+    {% endif %}
+{% else %}
+<div rozetkapay_alert_error style="color: red">{{ error }}</div>
+{% endif %}

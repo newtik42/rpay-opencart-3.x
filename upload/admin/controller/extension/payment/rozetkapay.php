@@ -1,12 +1,12 @@
 <?php
 
 class ControllerExtensionPaymentRozetkaPay extends Controller {
-    protected $version = '2.0.2';
+    protected $version = '2.1.5';
 
     private $type = 'payment';
     private $code = 'rozetkapay';
     private $path = 'extension/payment/rozetkapay';    
-    private $prefix = 'payment_';    
+    private $prefix = 'payment_rozetkapay_';    
     private $token_name = 'user_token';
     
     
@@ -34,6 +34,38 @@ class ControllerExtensionPaymentRozetkaPay extends Controller {
         
         
     }
+    
+    public function getDefaultValue($key, $isArray = false) {
+        
+        $setting = [
+            "login" => "",
+            "password" => "",
+            "status" => false,
+            "sort_order" => "0",
+            "geo_zone_id" => "0",
+            "holding_status" => false,
+            "qrcode_status" => false,
+            
+            "send_info_customer_status" => false,
+            "send_info_products_status" => false,
+            
+            "order_status_init" => "0",
+            "order_status_pending" => "0",
+            "order_status_success" => "",
+            "order_status_failure" => "",
+            
+            "test_status" => false,
+            "log_status" => false,
+            
+            "view_icon_status" => false,
+            "view_title_default" => false,
+            "view_title" => false,
+            "view_language_detect" => "avto"
+        ];
+        
+        return $setting[$key] ?? ($isArray ? [] : "");
+        
+    }
 
     public function index() {
         
@@ -52,46 +84,63 @@ class ControllerExtensionPaymentRozetkaPay extends Controller {
         $data['href_log_clear'] =  $this->SysUrl($this->path . '/logclear', $this->tokenUrl, true);
         $data['log'] = '';        
 
-        $arr = array("rozetkapay_login", "rozetkapay_password", "rozetkapay_status", 
-            "rozetkapay_sort_order", "rozetkapay_geo_zone_id", "rozetkapay_holding_status",
-            "rozetkapay_order_status_init","rozetkapay_order_status_pending","rozetkapay_qrcode_status",
-            "rozetkapay_order_status_success","rozetkapay_order_status_failure","rozetkapay_test_status", "rozetkapay_log_status",
-            'rozetkapay_send_info_customer_status', 'rozetkapay_send_info_products_status');
+        $arr = array(
+            "login", "password", "status", "sort_order", "geo_zone_id", "holding_status", "qrcode_status",
+            "language_detect", "currency_detect",
+            
+            
+            "order_status_init","order_status_pending", "order_status_success","order_status_failure",
+            "test_status", "log_status",
+            
+            'send_info_customer_status', 'send_info_products_status', 
+            "view_icon_status", "view_title_default", "view_title");
 
         foreach ($arr as $v) {
-            $data[$this->prefix.$v] = (isset($this->request->post[$this->prefix.$v])) ? $this->request->post[$this->prefix.$v] : $this->config->get($this->prefix.$v);            
+            
+            $key = $this->prefix . $v;
+            
+            if (isset($this->request->post[$key])) {
+                $data[$key] = $this->request->post[$key];
+            } elseif ($this->config->get($key) !== null) {
+                $data[$key] = $this->config->get($key);
+            } else {
+                $data[$key] = $this->getDefaultValue($key);
+            }
+            
         }
         
-        if (isset($this->request->post[$this->prefix.'rozetkapay_view_icon_status'])) {
-			$data[$this->prefix.'rozetkapay_view_icon_status'] = $this->request->post[$this->prefix.'rozetkapay_view_icon_status'];
-		} elseif ($this->config->get($this->prefix.'rozetkapay_view_icon_status') !== null) {
-			$data[$this->prefix.'rozetkapay_view_icon_status'] = $this->config->get($this->prefix.'rozetkapay_view_icon_status');
-		} else {
-			$data[$this->prefix.'rozetkapay_view_icon_status'] = true;
-		}
-        
-        if (isset($this->request->post[$this->prefix.'rozetkapay_view_title_default'])) {
-			$data[$this->prefix.'rozetkapay_view_title_default'] = $this->request->post[$this->prefix.'rozetkapay_view_title_default'];
-		} elseif ($this->config->get($this->prefix.'rozetkapay_view_title_default') !== null) {
-			$data[$this->prefix.'rozetkapay_view_title_default'] = $this->config->get($this->prefix.'rozetkapay_view_title_default');
-		} else {
-			$data[$this->prefix.'rozetkapay_view_title_default'] = true;
-		}
-        
-        if (isset($this->request->post[$this->prefix.'rozetkapay_view_title'])) {
-			$data[$this->prefix.'rozetkapay_view_title'] = $this->request->post[$this->prefix.'rozetkapay_view_title'];
-		} elseif ($this->config->get($this->prefix.'rozetkapay_view_title') !== null) {
-			$data[$this->prefix.'rozetkapay_view_title'] = $this->config->get($this->prefix.'rozetkapay_view_title');
-		} else {
-			$data[$this->prefix.'rozetkapay_view_title'] = array();
-		}
         
         $this->load->model('localisation/order_status');
         $data['order_statuses'] = $this->model_localisation_order_status->getOrderStatuses();
         $this->load->model('localisation/language');
         $data['languages'] = $this->model_localisation_language->getLanguages(array('start' => 0,'limit' => 999));
         $this->load->model('localisation/geo_zone');
-        $data['geo_zones'] = $this->model_localisation_geo_zone->getGeoZones();     
+        $data['geo_zones'] = $this->model_localisation_geo_zone->getGeoZones();        
+        $this->load->model('localisation/currency');
+        
+        $data['currencys'] = [];
+        $data['currencys'][] = [
+            'id' => "avto",
+            'name' => $this->language->get("text_rpay_detect_avto"),
+        ];
+        $currencys = $this->model_localisation_currency->getCurrencies(array('start' => 0,'limit' => 999));
+        foreach ($currencys as $currency) {
+            $data['currencys'][] = [
+                'id' => $currency['currency_id'],
+                'name' => $currency['title'] . " (" . $currency['code'] . ")",
+            ];
+        }
+        $data['rpay_languages'] = [];
+        $data['rpay_languages'][] = [
+            'id' => "avto",
+            'name' => $this->language->get("text_rpay_detect_avto"),
+        ];
+        foreach (["UK", "EN", "ES","PL", "FR", "SK", "DE"] as $value) {
+            $data['rpay_languages'][] = [
+                'id' => $value,
+                'name' => $this->language->get("text_rpay_language_" . $value),
+            ];
+        }
         
         $data['path'] = $this->path;
         $data['tokenUrl'] = $this->tokenUrl;
@@ -538,6 +587,8 @@ class ControllerExtensionPaymentRozetkaPay extends Controller {
         }
         
     }
+    
+    
     
     
     public function checkSysSupport() {

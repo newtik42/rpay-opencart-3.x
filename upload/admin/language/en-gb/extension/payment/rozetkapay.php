@@ -69,3 +69,16 @@ $_['error_currency_not_uah'] = 'There is no currency UAH on the site, without it
 
 
 $_['button_pay_holding'] = 'Go to payment (holding)';
+
+$_['text_currency_detect'] = 'Currency';
+
+$_['text_language_detect'] = 'Language';
+
+$_['text_rpay_detect_avto'] = 'Automatically determined';
+$_['text_rpay_language_UK'] = 'Ukrainian';
+$_['text_rpay_language_EN'] = 'English';
+$_['text_rpay_language_ES'] = 'Spanish';
+$_['text_rpay_language_PL'] = 'Polish';
+$_['text_rpay_language_FR'] = 'French';
+$_['text_rpay_language_SK'] = 'Slovak';
+$_['text_rpay_language_DE'] = 'German';
