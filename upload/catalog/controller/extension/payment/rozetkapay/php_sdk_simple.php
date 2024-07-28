@@ -108,6 +108,12 @@ class RozetkaPay {
                     $data['customer']['locale'] = $this->customer_locale;
                 }
             }
+            
+            if (isset($data['customer']['phone']) && !empty($data['customer']['phone'])) {
+                
+                $data['customer']['phone'] = str_replace(['(', ")", "-", " "], "", $data['customer']['phone']);
+                
+            }
         }
 
         $data['external_id'] = (string) $data['external_id'];
