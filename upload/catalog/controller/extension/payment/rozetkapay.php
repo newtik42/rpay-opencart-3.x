@@ -204,6 +204,10 @@ class ControllerExtensionPaymentRozetkaPay extends Controller {
                 $this->extLog($dataCheckout); 
                 $this->extLog($result); 
             }
+            
+            if(!$status_qrcode && $data['pay']){
+                $this->response->redirect($data['pay_href'], 302);
+            }
 
             return $this->load->view($this->path, $data);
 
