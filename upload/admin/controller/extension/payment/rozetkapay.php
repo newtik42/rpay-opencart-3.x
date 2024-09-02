@@ -1,7 +1,7 @@
 <?php
 
 class ControllerExtensionPaymentRozetkaPay extends Controller {
-    protected $version = '2.2.3';
+    protected $version = '2.2.4';
 
     private $type = 'payment';
     private $code = 'rozetkapay';
