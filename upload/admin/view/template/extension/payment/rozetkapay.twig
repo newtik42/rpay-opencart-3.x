@@ -57,14 +57,25 @@
                                     {% endif %}
                                 </div>
                             </div>
-                                
-                            
                             
                             <div class="form-group">
                                 <label class="col-sm-2 control-label">{{ entry_qrcode_status }}</label>
                                 <div class="col-sm-2">
                                     <select name="payment_rozetkapay_qrcode_status" class="form-control">
                                         {% if payment_rozetkapay_qrcode_status %}
+                                        <option value="1" selected="selected">{{ text_enabled }}</option>
+                                        <option value="0">{{ text_disabled }}</option>
+                                        {% else %}
+                                        <option value="1">{{ text_enabled }}</option>
+                                        <option value="0" selected="selected">{{ text_disabled }}</option>
+                                        {% endif %}
+                                    </select>
+                                </div>
+                                    
+                                <label class="col-sm-2 control-label">{{ entry_holding_status }}</label>
+                                <div class="col-sm-2">
+                                    <select name="payment_rozetkapay_holding_status" class="form-control">
+                                        {% if payment_rozetkapay_holding_status %}
                                         <option value="1" selected="selected">{{ text_enabled }}</option>
                                         <option value="0">{{ text_disabled }}</option>
                                         {% else %}
@@ -360,7 +371,7 @@
                             <div class="panel panel-default">
                                 <div class="panel-heading">
                                     <h3 class="panel-title"><i class="fa fa-exclamation-triangle"></i> {{ text_test_log_title }}</h3>
-                                    <div class="pull-right">
+                                    <div class="pull-right" style="margin-top: -9px;">
                                         <a id="log_refresh" onclick="nt_log_refresh()" data-toggle="tooltip" class="btn btn-warning">
                                             <i class="fa fa-refresh"></i>
                                         </a>

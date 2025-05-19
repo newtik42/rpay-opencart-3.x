@@ -2,10 +2,10 @@
 
 //doc
 //https://cdn.rozetkapay.com/public-docs/index.html
-//php SDK simple v2.2.3
+//php SDK simple v2.2.5
 class RozetkaPay {
 
-    const versionSDK = '2.2.3';
+    const versionSDK = '2.2.5';
     const version = 'v1';
     const urlBase = 'https://api.rozetkapay.com/api/';
     const testLogin = 'a6a29002-dc68-4918-bc5d-51a6094b14a8';
@@ -57,14 +57,8 @@ class RozetkaPay {
     }
 
     public function getHeaderSignature() {
-
-        foreach (getallheaders() as $key => $value) {
-            if ($key === "X-ROZETKAPAY-SIGNATURE") {
-                return $value;
-            }
-        }
-
-        return "";
+        $headers = array_change_key_case(getallheaders(), CASE_UPPER);
+        return isset($headers["X-ROZETKAPAY-SIGNATURE"]) ? $headers["X-ROZETKAPAY-SIGNATURE"] : "";
     }
 
     public function getSignature($data) {
@@ -75,7 +69,8 @@ class RozetkaPay {
 
         return strtr(base64_encode(sha1($this->password . strtr(base64_encode($data), '+/', '-_') . $this->password, true)), '+/', '-_');
     }
-
+    
+    
     public function checkoutCreat($data) {
 
         if (empty($data->callback_url)) {
@@ -157,7 +152,7 @@ class RozetkaPay {
         return $this->sendRequest("payments/" . self::version . "/info?external_id=" . $external_id);
     }
 
-    public function сallbacks() {
+    public function callbacks() {
 
         $entityBody = file_get_contents('php://input');
 

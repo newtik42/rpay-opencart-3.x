@@ -75,3 +75,5 @@ $_['text_rpay_language_FR'] = 'Французька';
 $_['text_rpay_language_SK'] = 'Словацька';
 $_['text_rpay_language_DE'] = 'Німецька';
 
+$_['entry_holding_status'] = '';
+$_['help_holding_status'] = '';

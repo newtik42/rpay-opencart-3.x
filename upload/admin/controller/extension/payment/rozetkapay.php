@@ -32,7 +32,6 @@ class ControllerExtensionPaymentRozetkaPay extends Controller {
         
         include_once DIR_CATALOG  .'controller/'.$this->path.'/php_sdk_simple.php';
         
-        
     }
     
     public function getDefaultValue($key, $isArray = false) {
@@ -550,7 +549,7 @@ class ControllerExtensionPaymentRozetkaPay extends Controller {
             
         }
         
-        $json['debug'] = $rpay->debug;
+        $json['debug'] = $rpay->getdebug();
         
         $this->response->addHeader('Content-Type: application/json');        
         $this->response->setOutput(json_encode($json));

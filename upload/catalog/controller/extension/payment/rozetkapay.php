@@ -39,7 +39,14 @@ class ControllerExtensionPaymentRozetkaPay extends Controller {
         
     }
     
-    public function extLog($var){
+    public function extLog($var, $level = 'debug'){
+        
+        if($level == "critical" && $this->_extlog === false){
+            $this->_extlog = new Log('rozetkapay.log');
+            $this->_extlog->write(json_encode($var, JSON_PRETTY_PRINT|JSON_UNESCAPED_UNICODE));
+            $this->_extlog = false;
+        }
+        
         if($this->_extlog !== false){
             $this->_extlog->write(json_encode($var, JSON_PRETTY_PRINT|JSON_UNESCAPED_UNICODE));
         }
@@ -81,7 +88,11 @@ class ControllerExtensionPaymentRozetkaPay extends Controller {
 
             $order_info = $this->model_checkout_order->getOrder($order_id);
 
-            $dataCheckout = new \RPayCheckoutCreatRequest();            
+            $dataCheckout = new \RPayCheckoutCreatRequest();   
+            
+            if($this->config->get($this->prefix.'holding_status') == "1"){
+                $dataCheckout->confirm = false;
+            }
             
             if($this->config->get($this->prefix.'send_info_customer_status') == "1"){
                 
@@ -144,11 +155,9 @@ class ControllerExtensionPaymentRozetkaPay extends Controller {
                     
                     $productNew->url = $this->url->link('product/product', 'product_id=' . $product_['product_id'] , true);
                     
-                    $dataCheckout->products[] = $productNew;
+                    $dataCheckout->products[] = $productNew;                    
                     
-                    
-                }
-                
+                }                
                 
             }
             
@@ -162,10 +171,6 @@ class ControllerExtensionPaymentRozetkaPay extends Controller {
                         $this->config->get($this->prefix.'currency_detect'), "UAH");
                 $order_info['currency_code'] = "UAH";
             }
-            
-            
-            
-            
 
             $dataCheckout->amount = $order_info['total'];
             $dataCheckout->external_id = $external_id;
@@ -175,7 +180,7 @@ class ControllerExtensionPaymentRozetkaPay extends Controller {
             list($result, $error) = $this->rpay->checkoutCreat($dataCheckout);
             
             $this->extLog($result);
-            $this->extLog($error);
+            
             $data['pay'] = false;
             
             if ($error === false) {
@@ -186,9 +191,21 @@ class ControllerExtensionPaymentRozetkaPay extends Controller {
             } else {
                 //$json['alert'][] = $this->language->get('error_code_' . $error->code);
                 $data['error'] .= "<br>".$error->message;
+                $this->extLog($error, 'critical');
+                
+                if($error->code == "transaction_already_paid"){
+                    
+                    $orderStatus_id = $this->getRozetkaPayStatusToOrderStatus("success");
+                    $this->model_checkout_order->addOrderHistory($order_id, $orderStatus_id, 'RozetkaPay', false);
+                    
+                }
+                
             }
             
-            $data['pay_qrcode'] = $status_qrcode;
+            
+            if($status_qrcode && $data['pay']){
+                $data['pay_qrcode'] = $this->genQrCode($data['pay_href']);
+            }
             
 
             if (isset($result->data)) {
@@ -241,10 +258,10 @@ class ControllerExtensionPaymentRozetkaPay extends Controller {
         $this->extLog('    orderStatus_id: ' . $orderStatus_id);
         
         $status_holding = isset($this->request->get['holding']);        
-        $this->extLog('    hasHolding: ' . $status_holding);
+        $this->extLog('    hasHolding: ' . $status_holding?"yes":"no");
         
         $refund = isset($this->request->get['refund']);        
-        $this->extLog('    hasRefund: ' . $refund);
+        $this->extLog('    hasRefund: ' . $refund?"yes":"no");
 
         $order_info = $this->model_checkout_order->getOrder($order_id);
 
@@ -319,21 +336,21 @@ class ControllerExtensionPaymentRozetkaPay extends Controller {
         }
     }
     
-    public function genQrCode() {
+    public function genQrCode($text) {
         
-        if(isset($this->request->post['text'])){
+        $imageData = '';
+        
+        if(!empty($text)){
             
-            include_once __DIR__ .'/rozetkapay/phpqrcode.php';
-            
-            $text = (string)$this->request->post['text'];
+            include_once __DIR__ .'/rozetkapay/phpqrcode.php';            
             
             ob_start();
             QRcode::png($text, null, QR_ECLEVEL_L, 10, 2);
-            $imageData = ob_get_contents(); 
-            ob_end_clean(); 
-
-            echo 'data:image/png;base64,'.base64_encode($imageData);
+            $imageData = 'data:image/png;base64,'.base64_encode(ob_get_contents()); 
+            ob_end_clean();            
         }
+                
+        return $imageData;
         
     }
 
